@@ -97,6 +97,7 @@ func main() {
 	}
 
 	http.HandleFunc("/api/health", healthHandler)
+	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc(trackingPostPath, trackingPostHandler)
 	http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 }
