@@ -1,0 +1,34 @@
+{
+	"ImportPath": "github.com/wunderlist/snowblower",
+	"GoVersion": "go1.4.2",
+	"Deps": [
+		{
+			"ImportPath": "github.com/awslabs/aws-sdk-go/aws",
+			"Rev": "4d3a6c40edac23885f1efb40c512f44eb6516aa3"
+		},
+		{
+			"ImportPath": "github.com/awslabs/aws-sdk-go/internal/endpoints",
+			"Rev": "4d3a6c40edac23885f1efb40c512f44eb6516aa3"
+		},
+		{
+			"ImportPath": "github.com/awslabs/aws-sdk-go/internal/protocol/query",
+			"Rev": "4d3a6c40edac23885f1efb40c512f44eb6516aa3"
+		},
+		{
+			"ImportPath": "github.com/awslabs/aws-sdk-go/internal/protocol/xml/xmlutil",
+			"Rev": "4d3a6c40edac23885f1efb40c512f44eb6516aa3"
+		},
+		{
+			"ImportPath": "github.com/awslabs/aws-sdk-go/internal/signer/v4",
+			"Rev": "4d3a6c40edac23885f1efb40c512f44eb6516aa3"
+		},
+		{
+			"ImportPath": "github.com/awslabs/aws-sdk-go/service/sns",
+			"Rev": "4d3a6c40edac23885f1efb40c512f44eb6516aa3"
+		},
+		{
+			"ImportPath": "github.com/vaughan0/go-ini",
+			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
+		}
+	]
+}
