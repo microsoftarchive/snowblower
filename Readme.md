@@ -3,7 +3,9 @@ Snowblower
 
 A Golang based Snowplow collector that pushes received events directly to an SNS topic with a minimum of processing. From there, messages can be routed to any number of SQS queues or other SNS topic subscriptions as you wish.
 
-In initial testing, this service is between 10 and 20 times more efficient than the Scala-based Snowplow Kinesis collector, based on the observation that we scaled down from 24 c3.xlarge machines to 2 in initial deployment. Besides the language difference, the performance improvements may be as much a result of writing to SNS instead of Kinesis or the minimization of processing of payloads and direct transmission of those payloads as byte arrays instead of using Thrift serialization.
+In initial testing, this service is between 10 and 20 times more efficient than the Scala-based Snowplow Kinesis collector, based on the observation that we scaled down from 24 c3.xlarge machines to 2 in initial deployment. Besides the language difference, the performance improvements may be as much a result of writing to SNS instead of Kinesis, the minimization of processing of payloads and direct transmission of those payloads as byte arrays instead of using Thrift serialization, or simply the fact that requests with empty payloads don’t result in writes.
+
+It’s likely that if these optimizations were applied back to the Scala code, significant performance increases would be seen. On the other hand, this is ~100 lines of code.
 
 Configuration
 -------------
