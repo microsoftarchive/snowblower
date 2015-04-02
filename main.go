@@ -38,6 +38,10 @@ func trackingPostHandler(w http.ResponseWriter, request *http.Request) {
 		body, err := ioutil.ReadAll(request.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
+		} else if len(body) == 0 {
+			log.Printf(
+				"Empty body in request from %s %s",
+				request.UserAgent(), request.Header.Get("X-Forwarded-For"))
 		} else {
 			payload := payload{}
 			if err := json.Unmarshal(body, &payload); err != nil {
