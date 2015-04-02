@@ -11,5 +11,5 @@ Configuration
 The following environment variables configure the operation of Snowblower:
 
 - `SNS_TOPIC` Must contain the ARN of the SNS topic to send events to. **REQUIRED**
-- `PORT` Optionally sets the port that the server listens to. Defaults to 8000.
+- `PORT` Optionally sets the port that the server listens to. Defaults to 8080.
 - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` Amazon Web Services credentials. If not set, Snowblower will attempt to use IAM Roles.
