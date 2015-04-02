@@ -54,6 +54,7 @@ func trackingPostHandler(w http.ResponseWriter, request *http.Request) {
 	default:
 		w.WriteHeader(http.StatusForbidden)
 	}
+	w.Write(nil)
 }
 
 func processPayload(payload payload) error {
