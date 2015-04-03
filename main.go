@@ -11,17 +11,13 @@ import (
 
 	"github.com/awslabs/aws-sdk-go/aws"
 	"github.com/awslabs/aws-sdk-go/service/sns"
+	"github.com/wunderlist/snowblower/snowplow"
 )
 
 var snsService *sns.SNS
 var snsTopic string
 
 const trackingPostPath = "/com.snowplowanalytics.snowplow/tp2"
-
-type payload struct {
-	Schema string            `json:"schema"`
-	Data   []json.RawMessage `json:"data"`
-}
 
 func healthHandler(w http.ResponseWriter, request *http.Request) {
 	msg := make(map[string]string)
@@ -43,7 +39,7 @@ func trackingPostHandler(w http.ResponseWriter, request *http.Request) {
 				"Empty body in request from %s %s",
 				request.UserAgent(), request.Header.Get("X-Forwarded-For"))
 		} else {
-			payload := payload{}
+			payload := snowplow.Payload{}
 			if err := json.Unmarshal(body, &payload); err != nil {
 				log.Printf("Rejecting posted payload. Error %s Payload: %s", err, body)
 				w.WriteHeader(http.StatusBadRequest)
@@ -61,7 +57,7 @@ func trackingPostHandler(w http.ResponseWriter, request *http.Request) {
 	w.Write(nil)
 }
 
-func processPayload(payload payload) error {
+func processPayload(payload snowplow.Payload) error {
 	for _, event := range payload.Data {
 
 		msg := string(event)
