@@ -6,8 +6,20 @@ package snowplow
 type Event struct {
 
 	// Application
-	AppID    string `json:"aid,omitempty" db:"app_id"`
-	Platform string `json:"p,omitempty" db:"platform"`
+	Namespace string `json:"tna,omitempty"` // not in db schema??
+	AppID     string `json:"aid,omitempty" db:"app_id"`
+	Platform  string `json:"p,omitempty" db:"platform"`
+
+	// Tracker
+	TrackerVersion string `json:"tv,omitempty"`
+	TrackerName    string `db:"v_tracker"`
+
+	// Collector
+	CollectorVersion string `db:"v_collector"`
+	CollectorName    string `db:"v_collector"`
+
+	// ETL
+	ETLName string `db:"v_etl"`
 
 	// Date & Time
 	CollectorTimestamp  string `db:"collector_tstamp"` // JSON?
@@ -15,18 +27,12 @@ type Event struct {
 	DeviceTimestamp     string `json:"dtm,omitempty" db:"dvce_tstamp"`
 	DeviceSentTimestamp string `db:"dvce_sent_tstamp"`
 	DerivedTimestamp    string `db:"derived_tstamp"`
-	//Timezone string `json:"tz,omitempty"`
+	Timezone            string `json:"tz,omitempty"`
 
 	// Event
 	Event         string `json:"e,omitempty" db:"event"`
 	EventID       string `json:"eid,omitempty" db:"event_id"`
 	TransactionID string `json:"tid,omitempty" db:"txn_id"`
-
-	// Versioning
-	// Name Tracker string db:"name_tracker"
-	// V Tracker string db:"v_tracker"
-	// V Collector string db:"v_collector"
-	// V ETL string db:"v_etl"
 
 	// User and visit
 	UserID          string `json:"uid,omitempty" db:"user_id"`
@@ -139,25 +145,25 @@ type Event struct {
 	UserAgent string `json:"ua,omitempty" db:"useragent"`
 
 	// Browser
-	BrowserName                 string `db:"br_name"`
-	BrowserFamily               string `db:"br_family"`
-	BrowserVersion              string `db:"br_version"`
-	BrowserType                 string `db:"br_type"`
-	BrowserRenderingEngine      string `db:"br_renderengine"`
-	BrowserLangauge             string `db:"br_lang"`
-	BrowserFeaturesPDF          bool   `json:"f_pdf,omitempty" db:"br_features_pdf"`
-	BrowserFeaturesFlash        bool   `json:"f_fla,omitempty" db:"br_features_flash"`
-	BrowserFeaturesJava         bool   `json:"f_java,omitempty" db:"br_features_java"`
-	BrowserFeaturesDirector     bool   `json:"f_dir,omitempty" db:"br_features_director"`
-	BrowserFeaturesQuickTime    bool   `json:"f_qt,omitempty" db:"br_features_quicktime"`
-	BrowserFeaturesRealPlayer   bool   `json:"f_realp,omitempty" db:"br_features_realplayer"`
-	BrowserFeaturesWindowsMedia bool   `json:"f_wma,omitempty" db:"br_features_windowsmedia"`
-	BrowserFeaturesGears        bool   `json:"f_gears,omitempty"db:"br_features_gears"`
-	BrowserFeaturesSilverlight  bool   `db:"br_features_silverlight"`
-	BrowserCookies              bool   `db:"br_cookies"`
-	BrowserColorDepth           string `db:"br_colordepth"`
-	BrowserViewWidth            int32  `db:"br_viewwidth"`
-	BrowserViewHeight           int32  `db:"br_viewheight"`
+	BrName           string `db:"br_name"`
+	BrFamily         string `db:"br_family"`
+	BrVersion        string `db:"br_version"`
+	BrType           string `db:"br_type"`
+	BrRenderer       string `db:"br_renderengine"`
+	BrLangauge       string `db:"br_lang"`
+	BrFeatPDF        bool   `json:"f_pdf,omitempty" db:"br_features_pdf"`
+	BrFeatFl         bool   `json:"f_fla,omitempty" db:"br_features_flash"`
+	BrFeatJava       bool   `json:"f_java,omitempty" db:"br_features_java"`
+	BrFeatDir        bool   `json:"f_dir,omitempty" db:"br_features_director"`
+	BrFeatQT         bool   `json:"f_qt,omitempty" db:"br_features_quicktime"`
+	BrFeatRealPlayer bool   `json:"f_realp,omitempty" db:"br_features_realplayer"`
+	BrFeatWinMedia   bool   `json:"f_wma,omitempty" db:"br_features_windowsmedia"`
+	BrFeatGears      bool   `json:"f_gears,omitempty"db:"br_features_gears"`
+	BrFeatSilver     bool   `db:"br_features_silverlight"`
+	BrCookies        bool   `db:"br_cookies"`
+	BrColorDepth     string `db:"br_colordepth"`
+	BrViewWidth      int32  `db:"br_viewwidth"`
+	BrViewHeight     int32  `db:"br_viewheight"`
 
 	// Operating System
 	OSName         string `db:"os_name"`
@@ -183,14 +189,9 @@ type Event struct {
 	// ETL Tags
 	ETLTags string `db:"etl_tags"`
 
-	// ---
-
-	//Namespace string `json:"tna,omitempty"`
-
-	TrackerVersion string `json:"tv,omitempty"`
+	// --- OTHER
 
 	Resolution string `json:"res,omitempty"`
-
 	Language   string `json:"lang,omitempty"`
 	ColorDepth string `json:"cd,omitempty"`
 	Viewport   string `json:"vp,omitempty"`
