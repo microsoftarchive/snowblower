@@ -18,6 +18,7 @@ type Service struct {
 	ServiceName       string
 	APIVersion        string
 	Endpoint          string
+	SigningRegion     string
 	JSONVersion       string
 	TargetPrefix      string
 	RetryRules        func(*Request) time.Duration
@@ -50,6 +51,8 @@ func (s *Service) Initialize() {
 	}
 
 	s.DefaultMaxRetries = 3
+	s.Handlers.Validate.PushBack(ValidateEndpointHandler)
+	s.Handlers.Validate.PushBack(ValidateCredentialsHandler)
 	s.Handlers.Build.PushBack(UserAgentHandler)
 	s.Handlers.Sign.PushBack(BuildContentLength)
 	s.Handlers.Send.PushBack(SendHandler)
@@ -67,7 +70,8 @@ func (s *Service) buildEndpoint() {
 	if s.Config.Endpoint != "" {
 		s.Endpoint = s.Config.Endpoint
 	} else {
-		s.Endpoint = endpoints.EndpointForRegion(s.ServiceName, s.Config.Region)
+		s.Endpoint, s.SigningRegion =
+			endpoints.EndpointForRegion(s.ServiceName, s.Config.Region)
 	}
 
 	if !schemeRE.MatchString(s.Endpoint) {

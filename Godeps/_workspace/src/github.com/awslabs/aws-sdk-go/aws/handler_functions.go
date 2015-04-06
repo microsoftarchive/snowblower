@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 )
 
@@ -15,7 +16,9 @@ type lener interface {
 }
 
 func BuildContentLength(r *Request) {
-	if r.HTTPRequest.Header.Get("Content-Length") != "" {
+	if slength := r.HTTPRequest.Header.Get("Content-Length"); slength != "" {
+		length, _ := strconv.ParseInt(slength, 10, 64)
+		r.HTTPRequest.ContentLength = length
 		return
 	}
 
@@ -74,5 +77,28 @@ func AfterRetryHandler(r *Request) {
 	if willRetry {
 		r.Error = nil
 		sleepDelay(delay)
+	}
+}
+
+var (
+	ErrMissingRegion      = fmt.Errorf("could not find region configuration.")
+	ErrMissingCredentials = fmt.Errorf("could not find credentials configuration.")
+)
+
+func ValidateEndpointHandler(r *Request) {
+	if r.Service.SigningRegion == "" && r.Service.Config.Region == "" {
+		r.Error = ErrMissingRegion
+	}
+}
+
+func ValidateCredentialsHandler(r *Request) {
+	if r.Service.Config.Credentials == nil {
+		r.Error = ErrMissingCredentials
+		return
+	}
+
+	creds, err := r.Service.Config.Credentials.Credentials()
+	if err != nil || creds.AccessKeyID == "" || creds.SecretAccessKey == "" {
+		r.Error = ErrMissingCredentials
 	}
 }
