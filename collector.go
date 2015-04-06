@@ -12,7 +12,7 @@ import (
 )
 
 type collector struct {
-	publisher EventPublisher
+	publisher Publisher
 }
 
 func (c *collector) ServeHTTP(w http.ResponseWriter, request *http.Request) {
@@ -49,15 +49,19 @@ func (c *collector) servePost(
 	request *http.Request,
 	networkID string,
 ) {
-	bytes, err := ioutil.ReadAll(request.Body)
+	bodyBytes, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(nil) // TODO make nice message
 		return
 	}
 
+	// this deserialization is used to check if we have any real data. It’s
+	// slightly wasteful, but it’s certainly not a deal breaker right now and
+	// the savings we get from not shipping empty events is huge
+
 	trackerPayload := TrackerPayload{}
-	if err := json.Unmarshal(bytes, &trackerPayload); err != nil {
+	if err := json.Unmarshal(bodyBytes, &trackerPayload); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(nil) // TODO make nice message
 		return

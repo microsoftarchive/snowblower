@@ -16,19 +16,19 @@ const singleDataPayload = `
 `
 
 type MockPublisher interface {
-	events() []*Event
+	messages() []string
 }
 
 type testPublisher struct {
-	gatheredEvents []*Event
+	collectedMessages []string
 }
 
-func (p *testPublisher) publish(event *Event) {
-	p.gatheredEvents = append(p.gatheredEvents, event)
+func (p *testPublisher) publish(message string) {
+	p.collectedMessages = append(p.collectedMessages, message)
 }
 
-func (p *testPublisher) events() []*Event {
-	return p.gatheredEvents
+func (p *testPublisher) messages() []string {
+	return p.collectedMessages
 }
 
 func setupRequest(method string, path string, body string) (*httptest.ResponseRecorder, *http.Request) {
@@ -84,29 +84,23 @@ func TestSetsSameCookieAsSent(t *testing.T) {
 func TestEmptyTrackingPostSendsNoMessages(t *testing.T) {
 	recorder, request := setupRequest("POST", "/", "")
 	publisher := performTestRequestAndGetPublisher(recorder, request, t)
-	if len(publisher.events()) == 1 {
-		t.Errorf("Shit, got %v events", len(publisher.events()))
+	if len(publisher.messages()) == 1 {
+		t.Errorf("Shit, got %v events", len(publisher.messages()))
 	}
 }
 
 func TestNoDataTrackingPostSendsNoMessages(t *testing.T) {
 	recorder, request := setupRequest("POST", "/", noDataPayload)
 	publisher := performTestRequestAndGetPublisher(recorder, request, t)
-	if len(publisher.events()) == 1 {
-		t.Errorf("Shit, got %v events", len(publisher.events()))
+	if len(publisher.messages()) == 1 {
+		t.Errorf("Shit, got %v events", len(publisher.messages()))
 	}
 }
 
 func TestSingleDataTrackingPostSendsOneEvent(t *testing.T) {
 	recorder, request := setupRequest("POST", "/", singleDataPayload)
 	publisher := performTestRequestAndGetPublisher(recorder, request, t)
-	if len(publisher.events()) != 1 {
-		t.Errorf("Shit, got %v events", len(publisher.events()))
-	} else {
-		e := publisher.events()[0]
-		if e.Namespace != "com.wunderlist" {
-			t.Errorf("Got wrong namespace: %s", e.Namespace)
-		}
-
+	if len(publisher.messages()) != 1 {
+		t.Errorf("Shit, got %v events", len(publisher.messages()))
 	}
 }

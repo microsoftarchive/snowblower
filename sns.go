@@ -1,24 +1,14 @@
 package main
 
-import (
-	"encoding/json"
-	"log"
+import "github.com/awslabs/aws-sdk-go/service/sns"
 
-	"github.com/awslabs/aws-sdk-go/service/sns"
-)
-
-type snsPublisher struct {
+// SNSPublisher ...
+type SNSPublisher struct {
 	service *sns.SNS
 	topic   string
 }
 
-func (p *snsPublisher) publish(event *Event) {
-	bytes, err := json.Marshal(event)
-	if err != nil {
-		log.Printf("Error marshalling JSON: %s", err)
-		return
-	}
-	message := string(bytes)
+func (p *SNSPublisher) publish(message string) {
 	input := sns.PublishInput{
 		Message:  &message,
 		TopicARN: &p.topic,
