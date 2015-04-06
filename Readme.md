@@ -1,17 +1,26 @@
-Snowblower
-==========
+# Snowblower
 
-A Golang based Snowplow collector that pushes received events directly to an SNS topic with a minimum of processing. From there, messages can be routed to any number of SQS queues or other SNS topic subscriptions as you wish.
+A lightweight high-performance Snowplow implementation in Go. Besides language choice, Snowblower differs from the official first party implementations its use of SNS/SQS as the data transport between stages and in its use of JSON-serialized Event records instead of Thrift-serialized CollectorPayloads.
 
-In initial testing, this service is between 10 and 20 times more efficient than the Scala-based Snowplow Kinesis collector, based on the observation that we scaled down from 24 c3.xlarge machines to 2 in initial deployment. Besides the language difference, the performance improvements may be as much a result of writing to SNS instead of Kinesis, the minimization of processing of payloads and direct transmission of those payloads as byte arrays instead of using Thrift serialization, or simply the fact that requests with empty payloads don’t result in writes.
+One advantage to using SNS/SQS instead of Kinesis is that SQS scales transparently without explicit provisioning instruction.
 
-It’s likely that if these optimizations were applied back to the Scala code, significant performance increases would be seen in that codebase. Honestly, it’s probably mostly the fact that empty payloads are being skipped. On the other hand, this is ~100 lines of code. 
+## Performance and Cost
 
-Configuration
--------------
+In initial testing, the collector service requires between 10 and 20 times fewer front-end compute resources than the Scala-based Snowplow Kinesis collector, based on the observation that we scaled down from 24 c3.xlarge machines to 2 on our initial deployment.
+
+## Running
+
+Snowblower has two commands:
+
+- `collect` Runs the collector, sending events to SNS or SQS, acting as the second stage in a Snowplow pipeline.
+- `enrich` Pulls events from SQS, enriches them, and sends them into storage into Postgres or Redshift, acting as the third stage in a Snowplow pipeline.
+
+
+## Configuration
 
 The following environment variables configure the operation of Snowblower:
 
 - `SNS_TOPIC` Must contain the ARN of the SNS topic to send events to. **REQUIRED**
 - `PORT` Optionally sets the port that the server listens to. Defaults to 8080.
 - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` Amazon Web Services credentials. If not set, Snowblower will attempt to use IAM Roles.
+- `COOKIE_DOMAIN` if not set, a domain won't be set on the session cookie
