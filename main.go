@@ -9,6 +9,7 @@ import (
 
 	"github.com/awslabs/aws-sdk-go/aws"
 	"github.com/awslabs/aws-sdk-go/service/sns"
+	"github.com/spf13/cobra"
 )
 
 //var snsService *sns.SNS
@@ -16,6 +17,21 @@ import (
 
 func main() {
 
+	var collectorCmd = &cobra.Command{
+		Use:   "collect",
+		Short: "Run the collector",
+		Run: func(cmd *cobra.Command, args []string) {
+			startCollector()
+		},
+	}
+
+	var rootCmd = &cobra.Command{Use: "snowblower"}
+	rootCmd.AddCommand(collectorCmd)
+	rootCmd.Execute()
+
+}
+
+func startCollector() {
 	if os.Getenv("GOMAXPROCS") == "" {
 		runtime.GOMAXPROCS(runtime.NumCPU())
 	}
@@ -36,8 +52,6 @@ func main() {
 		Credentials: credentials,
 		Region:      "eu-west-1",
 	})
-
-	println(snsService)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -61,5 +75,4 @@ func main() {
 	portString := fmt.Sprintf(":%s", port)
 	log.Printf("Starting server on %s", portString)
 	http.ListenAndServe(portString, nil)
-
 }
