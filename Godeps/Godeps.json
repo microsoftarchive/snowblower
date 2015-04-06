@@ -32,6 +32,14 @@
 			"Rev": "cd3645f72b55e1b15c98aa4f96c5f9cb17377a31"
 		},
 		{
+			"ImportPath": "github.com/spf13/cobra",
+			"Rev": "09b49c329c47d6bc60017050d2093ec96572b46e"
+		},
+		{
+			"ImportPath": "github.com/spf13/pflag",
+			"Rev": "18d831e92d67eafd1b0db8af9ffddbd04f7ae1f4"
+		},
+		{
 			"ImportPath": "github.com/vaughan0/go-ini",
 			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
 		}
