@@ -67,18 +67,32 @@ func (c *collector) servePost(
 		return
 	}
 
-	for _, event := range trackerPayload.Data {
-		if c.publisher != nil {
-			event.CollectorTimestamp = string(time.Now().UnixNano())
-			event.CollectorName = "Snowblower"
-			event.CollectorVersion = "0.0.1"
-			event.UserIPAddress = realRemoteAddr(request)
-			event.NetworkUserID = networkID
-			c.publisher.publish(&event)
-		} else {
-			log.Printf("Sending event to /dev/null: %s", event)
+	if len(trackerPayload.Data) > 0 {
+		collectorPayload := CollectorPayload{
+			Schema:        CollectorPayloadSchema,
+			IPAddress:     realRemoteAddr(request),
+			Timestamp:     time.Now().UnixNano() / 1000000,
+			Collector:     "Snowblower/0.0.1",
+			UserAgent:     request.UserAgent(),
+			Body:          string(bodyBytes),
+			Headers:       requestHeadersAsArray(request),
+			NetworkUserID: networkID,
+			//Encoding:      "",
+			//RefererURI:    "",
+			//Path:          "",
+			//QueryString:   "",
+			//ContentType:   "",
+			//Hostname:      "",
 		}
+		messageBytes, err := json.Marshal(collectorPayload)
+		if err != nil {
+			log.Printf("Error marshalling JSON: %s", err)
+			return
+		}
+		message := string(messageBytes)
+		c.publisher.publish(message)
 	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(nil)
 }
