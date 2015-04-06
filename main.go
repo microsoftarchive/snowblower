@@ -49,7 +49,7 @@ func main() {
 	http.Handle("/health", healthHandler)
 
 	collectorHandler := &collector{
-		publisher: &snsPublisher{
+		publisher: &SNSPublisher{
 			service: snsService,
 			topic:   snsTopic,
 		},
