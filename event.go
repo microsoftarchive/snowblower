@@ -1,4 +1,4 @@
-package snowplow
+package main
 
 // Event represents an individual atomic event. This is a mixture of what is
 // needed to decode JSON messages from clients as well as what columns in the
@@ -11,19 +11,19 @@ type Event struct {
 	Platform  string `json:"p,omitempty" db:"platform"`
 
 	// Tracker
-	TrackerVersion string `json:"tv,omitempty"`
-	TrackerName    string `db:"v_tracker"`
+	TrackerVersion string `json:"tv,omitempty" db:"v_tracker"`
+	TrackerName    string `json:"x_tracker_name,omitempty" db:"name_tracker"`
 
-	// Collector
-	CollectorVersion string `db:"v_collector"`
-	CollectorName    string `db:"v_collector"`
+	// Collector, added x_* json properties for intermediate serialization
+	CollectorVersion   string `json:"x_cv,omitempty" db:"v_collector"`
+	CollectorName      string `json:"x_cn,omitempty"`
+	CollectorTimestamp string `json:"x_c_tstamp,omitempty" db:"collector_tstamp"`
 
 	// ETL
-	ETLName string `db:"v_etl"`
+	ETLVersion   string `db:"v_etl"`
+	ETLTimestamp string `db:"etl_tstamp"` // JSON?
 
 	// Date & Time
-	CollectorTimestamp  string `db:"collector_tstamp"` // JSON?
-	ETLTimestamp        string `db:"etl_tstamp"`       // JSON?
 	DeviceTimestamp     string `json:"dtm,omitempty" db:"dvce_tstamp"`
 	DeviceSentTimestamp string `db:"dvce_sent_tstamp"`
 	DerivedTimestamp    string `db:"derived_tstamp"`
