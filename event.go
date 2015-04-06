@@ -6,22 +6,21 @@ package main
 type Event struct {
 
 	// Application
-	Namespace string `json:"tna,omitempty"` // not in db schema??
+	Namespace string `json:"tna,omitempty"`
 	AppID     string `json:"aid,omitempty" db:"app_id"`
 	Platform  string `json:"p,omitempty" db:"platform"`
 
 	// Tracker
 	TrackerVersion string `json:"tv,omitempty" db:"v_tracker"`
-	TrackerName    string `json:"x_tracker_name,omitempty" db:"name_tracker"`
+	TrackerName    string `db:"name_tracker"`
 
-	// Collector, added x_* json properties for intermediate serialization
-	CollectorVersion   string `json:"x_cv,omitempty" db:"v_collector"`
-	CollectorName      string `json:"x_cn,omitempty"`
-	CollectorTimestamp string `json:"x_c_tstamp,omitempty" db:"collector_tstamp"`
+	CollectorVersion   string `db:"v_collector"`
+	CollectorName      string ``
+	CollectorTimestamp string `'db:"collector_tstamp"`
 
 	// ETL
 	ETLVersion   string `db:"v_etl"`
-	ETLTimestamp string `db:"etl_tstamp"` // JSON?
+	ETLTimestamp string `db:"etl_tstamp"`
 
 	// Date & Time
 	DeviceTimestamp     string `json:"dtm,omitempty" db:"dvce_tstamp"`
@@ -37,27 +36,27 @@ type Event struct {
 	// User and visit
 	UserID          string `json:"uid,omitempty" db:"user_id"`
 	UserIPAddress   string `json:"ip,omitempty" db:"user_ipaddress"`
-	UserFingerprint string `db:"user_fingerprint"` // JSON?
+	UserFingerprint string `db:"user_fingerprint"`
 	DomainUserID    string `json:"duid,omitempty" db:"domain_userid"`
 	DomainSessionID string `db:"domain_sessionid"`
 	// int16 db:"domain_sessionidx" ??
 	NetworkUserID string `json:"tnuid,omitempty" db:"domain_userid"`
 
 	// Location
-	GeoCountry    string  `db:"geo_country"`     // JSON?
-	GeoRegion     string  `db:"geo_region"`      // JSON?
-	GeoCity       string  `db:"geo_city"`        // JSON?
-	GeoZipcode    string  `db:"geo_zipcode"`     // JSON?
-	GeoLatitude   float32 `db:"geo_latitude"`    // JSON?
-	GeoLongitude  float32 `db:"geo_longitude"`   // JSON?
-	GeoRegionName string  `db:"geo_region_name"` // JSON?
+	GeoCountry    string  `db:"geo_country"`
+	GeoRegion     string  `db:"geo_region"`
+	GeoCity       string  `db:"geo_city"`
+	GeoZipcode    string  `db:"geo_zipcode"`
+	GeoLatitude   float32 `db:"geo_latitude"`
+	GeoLongitude  float32 `db:"geo_longitude"`
+	GeoRegionName string  `db:"geo_region_name"`
 	GeoTimeZone   string  `db:"geo_timezone"`
 
 	// IP Lookups
-	IPISP          string `db:"ip_isp"`          // JSON?
-	IPOrganization string `db:"ip_organization"` // JSON?
-	IPDomain       string `db:"ip_domain"`       // JSON?
-	IPNetspeed     string `db:"ip_netspeed"`     // JSON?
+	IPISP          string `db:"ip_isp"`
+	IPOrganization string `db:"ip_organization"`
+	IPDomain       string `db:"ip_domain"`
+	IPNetspeed     string `db:"ip_netspeed"`
 
 	// Page
 	PageURL      string `json:"url,omitempty" db:"page_url"`
