@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
@@ -41,4 +42,14 @@ func realRemoteAddr(request *http.Request) string {
 	}
 
 	return request.RemoteAddr
+}
+
+func requestHeadersAsArray(request *http.Request) []string {
+	var headers []string
+	for k, v := range request.Header {
+		for _, i := range v {
+			headers = append(headers, fmt.Sprintf("%s: %s", k, i))
+		}
+	}
+	return headers
 }

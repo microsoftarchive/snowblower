@@ -72,3 +72,13 @@ func TestRealRemoteAddrWithPrivate192DotXFFHeader(t *testing.T) {
 		t.Errorf("Expected 8.8.8.8, got: %s", addr)
 	}
 }
+
+func TestRequestHeadersAsArray(t *testing.T) {
+	request := makeRequest()
+	request.Header.Add("foo", "bar")
+	request.Header.Add("foo", "baz")
+	headers := requestHeadersAsArray(request)
+	if len(headers) != 2 {
+		t.Errorf("Wrong number of headers, expected 2, got %v", len(headers))
+	}
+}
