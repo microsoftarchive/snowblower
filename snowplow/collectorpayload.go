@@ -1,4 +1,4 @@
-package main
+package snowplow
 
 // CollectorPayloadSchema ...
 const CollectorPayloadSchema = "iglu:com.snowplowanalytics.snowplow/CollectorPayload/thrift/1-0-0"

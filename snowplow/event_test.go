@@ -1,4 +1,4 @@
-package main
+package snowplow
 
 import (
 	"encoding/json"
