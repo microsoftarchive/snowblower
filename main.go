@@ -2,9 +2,6 @@ package main
 
 import "github.com/spf13/cobra"
 
-//var snsService *sns.SNS
-//var snsTopic string
-
 func main() {
 
 	var collectorCmd = &cobra.Command{
