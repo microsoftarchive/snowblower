@@ -4,8 +4,23 @@ import (
 	"fmt"
 
 	"github.com/awslabs/aws-sdk-go/aws"
+	"github.com/awslabs/aws-sdk-go/service/sns"
 	"github.com/awslabs/aws-sdk-go/service/sqs"
 )
+
+// SNSPublisher ...
+type SNSPublisher struct {
+	service *sns.SNS
+	topic   string
+}
+
+func (p *SNSPublisher) publish(message string) {
+	input := sns.PublishInput{
+		Message:  &message,
+		TopicARN: &p.topic,
+	}
+	p.service.Publish(&input)
+}
 
 // SQSService ...
 type SQSService struct {
