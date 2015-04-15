@@ -7,11 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"runtime"
 	"time"
 
-	"github.com/awslabs/aws-sdk-go/aws"
-	"github.com/awslabs/aws-sdk-go/service/sns"
 	"github.com/wunderlist/snowblower/snowplow"
 
 	"code.google.com/p/go-uuid/uuid"
@@ -104,31 +101,6 @@ func (c *collector) servePost(
 }
 
 func startCollector() {
-	if os.Getenv("GOMAXPROCS") == "" {
-		runtime.GOMAXPROCS(runtime.NumCPU())
-	}
-
-	var credentials aws.CredentialsProvider
-	if os.Getenv("AWS_ACCESS_KEY_ID") != "" {
-		credentials = aws.DefaultCreds()
-	} else {
-		credentials = aws.IAMCreds()
-	}
-
-	snsTopic := os.Getenv("SNS_TOPIC")
-	if snsTopic == "" {
-		panic("SNS_TOPIC required")
-	}
-
-	snsService := sns.New(&aws.Config{
-		Credentials: credentials,
-		Region:      "eu-west-1",
-	})
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
 
 	healthHandler := &health{}
 	http.Handle("/api/health", healthHandler)
@@ -136,15 +108,15 @@ func startCollector() {
 
 	collectorHandler := &collector{
 		publisher: &SNSPublisher{
-			service: snsService,
-			topic:   snsTopic,
+			service: config.snsService,
+			topic:   config.snsTopic,
 		},
 	}
 
 	http.Handle("/com.snowplowanalytics.snowplow/tp2", collectorHandler)
 	http.Handle("/i", collectorHandler)
 
-	portString := fmt.Sprintf(":%s", port)
+	portString := fmt.Sprintf(":%s", config.collectorPort)
 	log.Printf("Starting server on %s", portString)
 	http.ListenAndServe(portString, nil)
 }
