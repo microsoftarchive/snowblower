@@ -13,6 +13,7 @@ var config struct {
 	credentials   aws.CredentialsProvider
 	snsTopic      string
 	snsService    *sns.SNS
+	sqsURL        string
 	collectorPort string
 }
 
@@ -35,6 +36,7 @@ func main() {
 	}
 
 	config.snsTopic = os.Getenv("SNS_TOPIC")
+	config.sqsURL = os.Getenv("SQS_URL")
 
 	config.snsService = sns.New(&aws.Config{
 		Credentials: config.credentials,
@@ -56,7 +58,9 @@ func main() {
 		Use:   "etl",
 		Short: "Run the ETL processor",
 		Run: func(cd *cobra.Command, args []string) {
-			// ensure we have sqs information here
+			if config.sqsURL == "" {
+				panic("SQS_URL required")
+			}
 			// ensure we have database information here
 			startETL()
 		},
