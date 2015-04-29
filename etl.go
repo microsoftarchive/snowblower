@@ -22,7 +22,7 @@ func startETL() {
 	queue.params = &sqs.ReceiveMessageInput{
 		QueueURL: aws.String(config.sqsURL),
 		AttributeNames: []*string{
-			aws.String("SentTimestamp"), // Required
+			aws.String("All"), // Required
 		},
 		MaxNumberOfMessages: aws.Long(10),
 		MessageAttributeNames: []*string{
