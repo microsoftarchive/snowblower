@@ -1,4 +1,4 @@
-package main
+package snowplow
 
 // TrackerPayload defines the structure of data posted from Snowplow trackers
 type TrackerPayload struct {

@@ -1,4 +1,4 @@
-package main
+package snowplow
 
 // Event represents an individual atomic event. This is a mixture of what is
 // needed to decode JSON messages from clients as well as what columns in the

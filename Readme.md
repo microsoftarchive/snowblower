@@ -1,11 +1,11 @@
 # Snowblower
 
-A lightweight high-performance Golang Snowplow collector and enricher. Besides language choice, Snowblower differs from the official first party implementations the following ways:
+A lightweight high-performance Golang Snowplow collector and enricher. Besides the language choice, Snowblower differs from the official Snowplow implementations the following ways:
 
 - Snowblower supports SNS/SQS as the intermediate data store between stages
 - Snowblower uses a JSON serialization for CollectorPayloads instead of Thrift.
 
-It’d be rather trivial to add both a Kinesis stream as a destination for the collector as well as to support Thrift, at which point it would be a complete drop-in replacement for the Snowplow Scala Kinesis Collector.
+It’d be rather trivial to add both a Kinesis stream as a destination for the collector as well as to support Thrift, at which point it would be a complete drop-in replacement for the Snowplow Scala Kinesis Collector. However, for our needs, SQS provides a pretty compelling solution.
 
 ## Performance and Cost
 
@@ -30,7 +30,7 @@ Snowblower has two commands:
 
 ## Configuration
 
-The following environment variables configure the operation of Snowblower:
+The following environment variables configure the operation of Snowblower when running the collector:
 
 - `SNS_TOPIC` Must contain the ARN of the SNS topic to send events to. **REQUIRED**
 - `PORT` Optionally sets the port that the server listens to. Defaults to 8080.
