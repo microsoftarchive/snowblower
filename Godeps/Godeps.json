@@ -32,6 +32,14 @@
 			"Rev": "cd3645f72b55e1b15c98aa4f96c5f9cb17377a31"
 		},
 		{
+			"ImportPath": "github.com/awslabs/aws-sdk-go/service/sqs",
+			"Rev": "cd3645f72b55e1b15c98aa4f96c5f9cb17377a31"
+		},
+		{
+			"ImportPath": "github.com/duncan/base64x",
+			"Rev": "a119b4bf1ecd392737ce9c95dff829c5c9f784c3"
+		},
+		{
 			"ImportPath": "github.com/spf13/cobra",
 			"Rev": "09b49c329c47d6bc60017050d2093ec96572b46e"
 		},
