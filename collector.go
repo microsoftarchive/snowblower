@@ -9,8 +9,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/wunderlist/snowblower/snowplow"
-
 	"code.google.com/p/go-uuid/uuid"
 )
 
@@ -63,7 +61,7 @@ func (c *collector) servePost(
 	// slightly wasteful, but it’s certainly not a deal breaker right now and
 	// the savings we get from not shipping empty events is huge
 
-	trackerPayload := snowplow.TrackerPayload{}
+	trackerPayload := TrackerPayload{}
 	if err := json.Unmarshal(bodyBytes, &trackerPayload); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(nil) // TODO make nice message
@@ -71,8 +69,8 @@ func (c *collector) servePost(
 	}
 
 	if len(trackerPayload.Data) > 0 {
-		collectorPayload := snowplow.CollectorPayload{
-			Schema:        snowplow.CollectorPayloadSchema,
+		collectorPayload := CollectorPayload{
+			Schema:        CollectorPayloadSchema,
 			IPAddress:     realRemoteAddr(request),
 			Timestamp:     time.Now().UnixNano() / 1000000,
 			Collector:     "Snowblower/0.0.1",

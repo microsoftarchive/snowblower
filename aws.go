@@ -8,6 +8,13 @@ import (
 	"github.com/awslabs/aws-sdk-go/service/sqs"
 )
 
+// SNSMessage ...
+type SNSMessage struct {
+	Type      string `json:"Type"`
+	MessageID string `json:"MessageID"`
+	Message   string `json:"Message"`
+}
+
 // SNSPublisher ...
 type SNSPublisher struct {
 	service *sns.SNS

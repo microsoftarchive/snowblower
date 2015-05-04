@@ -1,4 +1,37 @@
-package snowplow
+package main
+
+// CollectorPayloadSchema ...
+const CollectorPayloadSchema = "iglu:com.snowplowanalytics.snowplow/CollectorPayload/thrift/1-0-0"
+
+// Iglu ...
+type Iglu struct {
+	Schema string      `json:"schema"`
+	Data   interface{} `json:"data"`
+}
+
+// CollectorPayload defines the structure of data posted from Snowplow trackers
+type CollectorPayload struct {
+	Schema        string   `json:"schema"`
+	IPAddress     string   `json:"ipAddress"`
+	Timestamp     int64    `json:"timestamp"`
+	Encoding      string   `json:"encoding"`
+	Collector     string   `json:"collector"`
+	UserAgent     string   `json:"userAgent,omitempty"`
+	RefererURI    string   `json:"refererUri,omitempty"`
+	Path          string   `json:"path,omitempty"`
+	QueryString   string   `json:"querystring,omitempty"`
+	Body          string   `json:"body,omitempty"`
+	Headers       []string `json:"headers,omitempty"`
+	ContentType   string   `json:"contentType,omitEmpty"`
+	Hostname      string   `json:"hostname,omitEmpty"`
+	NetworkUserID string   `json:"networkUserId,omitEmpty"`
+}
+
+// TrackerPayload defines the structure of data posted from Snowplow trackers
+type TrackerPayload struct {
+	Schema string  `json:"schema"`
+	Data   []Event `json:"data"`
+}
 
 // Event represents an individual atomic event. This is a mixture of what is
 // needed to decode JSON messages from clients as well as what columns in the
@@ -6,41 +39,32 @@ package snowplow
 type Event struct {
 
 	// Application
-	Namespace string `json:"tna,omitempty"`
-	AppID     string `json:"aid,omitempty" db:"app_id"`
-	Platform  string `json:"p,omitempty" db:"platform"`
+	AppID    string `json:"aid,omitempty" db:"app_id"`
+	Platform string `json:"p,omitempty" db:"platform"`
 
-	// Tracker
-	TrackerVersion string `json:"tv,omitempty" db:"v_tracker"`
-	TrackerName    string `db:"name_tracker"`
-
-	CollectorVersion   string `db:"v_collector"`
-	CollectorName      string ``
+	// Date/Time
+	ETLTimestamp       string `db:"etl_tstamp"`
 	CollectorTimestamp string `'db:"collector_tstamp"`
-
-	// ETL
-	ETLVersion   string `db:"v_etl"`
-	ETLTimestamp string `db:"etl_tstamp"`
-
-	// Date & Time
-	DeviceTimestamp     string `json:"dtm,omitempty" db:"dvce_tstamp"`
-	DeviceSentTimestamp string `db:"dvce_sent_tstamp"`
-	DerivedTimestamp    string `db:"derived_tstamp"`
-	Timezone            string `json:"tz,omitempty"`
+	DeviceTimestamp    string `json:"dtm,omitempty" db:"dvce_tstamp"`
 
 	// Event
 	Event         string `json:"e,omitempty" db:"event"`
 	EventID       string `json:"eid,omitempty" db:"event_id"`
 	TransactionID string `json:"tid,omitempty" db:"txn_id"`
 
+	// Namespaceing and versioning
+	TrackerName      string `db:"name_tracker"`
+	TrackerVersion   string `json:"tv,omitempty" db:"v_tracker"`
+	CollectorVersion string `db:"v_collector"`
+	ETLVersion       string `db:"v_etl"`
+
 	// User and visit
-	UserID          string `json:"uid,omitempty" db:"user_id"`
-	UserIPAddress   string `json:"ip,omitempty" db:"user_ipaddress"`
-	UserFingerprint string `db:"user_fingerprint"`
-	DomainUserID    string `json:"duid,omitempty" db:"domain_userid"`
-	DomainSessionID string `db:"domain_sessionid"`
-	// int16 db:"domain_sessionidx" ??
-	NetworkUserID string `json:"tnuid,omitempty" db:"domain_userid"`
+	UserID           string `json:"uid,omitempty" db:"user_id"`
+	UserIPAddress    string `json:"ip,omitempty" db:"user_ipaddress"`
+	UserFingerprint  string `db:"user_fingerprint"`
+	DomainUserID     string `json:"duid,omitempty" db:"domain_userid"`
+	DomainSessionIDX int16  `db:"domain_sessionidx"`
+	NetworkUserID    string `json:"tnuid,omitempty" db:"domain_userid"`
 
 	// Location
 	GeoCountry    string  `db:"geo_country"`
@@ -50,7 +74,6 @@ type Event struct {
 	GeoLatitude   float32 `db:"geo_latitude"`
 	GeoLongitude  float32 `db:"geo_longitude"`
 	GeoRegionName string  `db:"geo_region_name"`
-	GeoTimeZone   string  `db:"geo_timezone"`
 
 	// IP Lookups
 	IPISP          string `db:"ip_isp"`
@@ -80,11 +103,9 @@ type Event struct {
 	ReferrerURLFragment string `db:"refr_urlfragment"`
 
 	// Referrer Details
-	ReferrerMedium          string `db:"refr_medium"`
-	ReferrerSource          string `db:"refr_source"`
-	ReferrerTerm            string `db:"refr_term"`
-	ReferrerDomainUserID    string `db:"refr_domain_userid"`
-	ReferrerDeviceTimestamp string `db:"refr_dvce_timestamp"`
+	ReferrerMedium string `db:"refr_medium"`
+	ReferrerSource string `db:"refr_source"`
+	ReferrerTerm   string `db:"refr_term"`
 
 	// Marketing
 	MarketingMedium   string `db:"mkt_medium"`
@@ -93,12 +114,11 @@ type Event struct {
 	MarketingContent  string `db:"mkt_content"`
 	MarketingCampaign string `db:"mkt_campaign"`
 
-	// Contexts
+	// Custom Contexts
 	Contexts        string `json:"co,omitempty" db:"contexts"`
 	ContextsEncoded string `json:"cx,omitempty"`
-	DerivedContexts string `db:"derived_contexts"`
 
-	// Structured Event
+	// Custom Structured Event
 	StructuredEventCategory string `json:"se_ca,omitempty" db:"se_category"`
 	StructuredEventAction   string `json:"se_ac,omitempty" db:"se_action"`
 	StructuredEventLabel    string `json:"se_la,omitempty" db:"se_label"`
@@ -118,21 +138,12 @@ type Event struct {
 	TransactionCity         string `json:"tr_ci,omitempty" db:"tr_city"`
 	TransactionState        string `json:"tr_st,omitempty" db:"tr_state"`
 	TransactionCountry      string `json:"tr_co,omitempty" db:"tr_country"`
-	TransactionCurrency     string `json:"tr_cu,omitempty" db:"tr_currency"`
-	TransactionTotalBase    string `db:"tr_total_base"`
-	TransactionTaxBase      string `db:"tr_tax_base"`
-	TransactionShippingBase string `db:"tr_shipping_base"`
-
 	TransactionItemID       string `json:"ti_id,omitempty" db:"ti_orderid"`
 	TransactionItemSKU      string `json:"ti_sk,omitempty" db:"ti_sku"`
 	TransactionItemName     string `json:"ti_nm,omitempty" db:"ti_name"`
 	TransactionItemCategory string `json:"ti_ca,omitempty" db:"ti_category"`
 	TransactionItemPrice    string `json:"ti_pr,omitempty" db:"ti_price"`
 	TransactionItemQuantity string `json:"ti_qu,omitempty" db:"ti_quantity"`
-	TransactionItemCurrency string `json:"ti_cu,omitempty" db:"ti_currency"`
-	TransactionItemBase     string `db:"ti_price_base"`
-
-	BaseCurrency string `db:"base_currency"`
 
 	// Page Ping
 	PPXOffsetMin int32 `json:"pp_mix,omitempty" db:"pp_xoffset_min"`
@@ -181,6 +192,18 @@ type Event struct {
 	DocWidth   int32  `db:"doc_width"`
 	DocHeight  int32  `db:"doc_height"`
 
+	// Currency
+	TransactionCurrency     string `json:"tr_cu,omitempty" db:"tr_currency"`
+	TransactionTotalBase    string `db:"tr_total_base"`
+	TransactionTaxBase      string `db:"tr_tax_base"`
+	TransactionShippingBase string `db:"tr_shipping_base"`
+	TransactionItemCurrency string `json:"ti_cu,omitempty" db:"ti_currency"`
+	TransactionItemBase     string `db:"ti_price_base"`
+	BaseCurrency            string `db:"base_currency"`
+
+	// Geolocation
+	GeoTimeZone string `db:"geo_timezone"`
+
 	// Click ID
 	MarketClickID string `db:"mkt_clickid"`
 	MarketNetwork string `db:"mkt_network"`
@@ -188,8 +211,26 @@ type Event struct {
 	// ETL Tags
 	ETLTags string `db:"etl_tags"`
 
-	// --- OTHER
+	// Time event was sent
+	DeviceSentTimestamp string `db:"dvce_sent_tstamp"`
 
+	// Referer
+	ReferrerDomainUserID    string `db:"refr_domain_userid"`
+	ReferrerDeviceTimestamp string `db:"refr_dvce_timestamp"`
+
+	// Contexts
+	DerivedContexts string `db:"derived_contexts"`
+
+	// SessionID
+	DomainSessionID string `db:"domain_sessionid"`
+
+	// Derived Timestamp
+	DerivedTimestamp string `db:"derived_tstamp"`
+
+	// JSON ONLY PROPERTIES ON INCOMING EVENT
+
+	Namespace  string `json:"tna,omitempty"`
+	Timezone   string `json:"tz,omitempty"`
 	Resolution string `json:"res,omitempty"`
 	Language   string `json:"lang,omitempty"`
 	ColorDepth string `json:"cd,omitempty"`
