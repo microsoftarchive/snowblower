@@ -52,8 +52,7 @@ func performTestRequestAndGetPublisher(
 	t *testing.T,
 ) MockPublisher {
 	collector := performTestRequest(recorder, request)
-	var i interface{} = collector.publisher
-	if p, ok := i.(MockPublisher); ok {
+	if p, ok := collector.publisher.(MockPublisher); ok {
 		return p
 	}
 	t.Error("Internal problem with test interfaces")
