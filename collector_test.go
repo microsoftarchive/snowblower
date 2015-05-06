@@ -5,6 +5,9 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"encoding/json"
+	"reflect"
+	"sort"
 )
 
 const noDataPayload = `
@@ -59,6 +62,18 @@ func performTestRequestAndGetPublisher(
 	return nil
 }
 
+func unmarshalCollectorPayload(p MockPublisher, t *testing.T) CollectorPayload {
+	message := p.messages()[0]
+	messageBytes := []byte(message)
+	collectorPayload := CollectorPayload{}
+
+	if err := json.Unmarshal(messageBytes, &collectorPayload); err != nil {
+		t.Error("Error unmarshalling collectorPayload after creation")
+	}
+
+	return collectorPayload
+}
+
 func TestSetsCookieWhenNoneSent(t *testing.T) {
 	recorder, request := setupRequest("GET", "/", "")
 	_ = performTestRequest(recorder, request)
@@ -101,5 +116,35 @@ func TestSingleDataTrackingPostSendsOneEvent(t *testing.T) {
 	publisher := performTestRequestAndGetPublisher(recorder, request, t)
 	if len(publisher.messages()) != 1 {
 		t.Errorf("Shit, got %v events", len(publisher.messages()))
+	}
+}
+
+func TestBodyIsPassedCorrectly(t *testing.T) {
+	recorder, request := setupRequest("POST", "/", singleDataPayload)
+	publisher := performTestRequestAndGetPublisher(recorder, request, t)
+	collectorPayload := unmarshalCollectorPayload(publisher, t)
+	if collectorPayload.Body != singleDataPayload {
+		t.Error("TrackerPayload is corrupted")
+	}
+}
+
+func TestHeadersArePassedCorrectly(t *testing.T) {
+	recorder, request := setupRequest("POST", "/", singleDataPayload)
+	request.Header.Add("foo", "bar")
+	request.Header.Add("baz", "qux")
+	publisher := performTestRequestAndGetPublisher(recorder, request, t)
+	collectorPayload := unmarshalCollectorPayload(publisher, t)
+
+	if len(collectorPayload.Headers) != 2 {
+		t.Errorf("Expecting 2 headers but received %v", len(collectorPayload.Headers))
+	}
+
+	expectedHeaders := requestHeadersAsArray(request)
+
+	sort.Strings(collectorPayload.Headers)
+	sort.Strings(expectedHeaders)
+
+	if !reflect.DeepEqual(collectorPayload.Headers, expectedHeaders) {
+		t.Error("Headers are not passed correctly")
 	}
 }
