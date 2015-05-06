@@ -9,7 +9,7 @@ type Iglu struct {
 	Data   interface{} `json:"data"`
 }
 
-// CollectorPayload defines the structure of data posted from Snowplow trackers
+// CollectorPayload defines the structure of data posted from Snowplow collectors
 type CollectorPayload struct {
 	Schema        string   `json:"schema"`
 	IPAddress     string   `json:"ipAddress"`
