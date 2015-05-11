@@ -19,14 +19,14 @@ var queue struct {
 }
 
 type enrichedPublisher struct {
-	events []sp.Event
+	events []string
 }
 
-func (s *enrichedPublisher) publish(e *sp.Event) {
-	s.events = append(s.events, *e)
+func (s *enrichedPublisher) Publish(message string) {
+	s.events = append(s.events, message)
 }
 
-var publisher Publisher
+var publisher common.Publisher
 
 func Start(config common.Config) {
 	queue.service = sqs.New(&aws.Config{
@@ -70,7 +70,7 @@ func processNextBatch() {
 	}
 }
 
-func processSNSMessage(message *sqs.Message, p Publisher) {
+func processSNSMessage(message *sqs.Message, p common.Publisher) {
 	//messageID := *message.MessageID
 	//receiptHandle := *message.ReceiptHandle
 
@@ -88,7 +88,7 @@ func processSNSMessage(message *sqs.Message, p Publisher) {
 	}
 }
 
-func processCollectorPayload(cp sp.CollectorPayload, p Publisher) {
+func processCollectorPayload(cp sp.CollectorPayload, p common.Publisher) {
 	tp := sp.TrackerPayload{}
 	if err := json.Unmarshal([]byte(cp.Body), &tp); err != nil {
 		fmt.Printf("TRACKER PAYLOAD UNMARSHALL ERROR %s\n", err)
@@ -100,10 +100,10 @@ func processCollectorPayload(cp sp.CollectorPayload, p Publisher) {
 	}
 }
 
-func processEvent(e sp.Event, tp sp.TrackerPayload, cp sp.CollectorPayload, p Publisher) {
+func processEvent(e sp.Event, tp sp.TrackerPayload, cp sp.CollectorPayload, p common.Publisher) {
 	enrichEvent(&e, tp, cp)
 	publishEvent(&e, p)
-	
+
 	o, _ := json.MarshalIndent(e, "", " ")
 	fmt.Printf("JSON: %s", o)
 }
@@ -139,7 +139,8 @@ func enrichEvent(e *sp.Event, tp sp.TrackerPayload, cp sp.CollectorPayload) {
 	e.NetworkUserID = cp.NetworkUserID
 }
 
-func publishEvent(e *sp.Event, p Publisher) {
-	p.publish(e)
+func publishEvent(e *sp.Event, p common.Publisher) {
+	// TODO: serialise event.
+	p.Publish("hello")
 	//fmt.Printf("\nXXX length of events: %d\n", len(p.(*testPublisher).events))
 }
