@@ -1,4 +1,4 @@
-package main
+package collector
 
 import (
 	"net/http"
@@ -23,7 +23,7 @@ type testPublisher struct {
 	collectedMessages []string
 }
 
-func (p *testPublisher) publish(message string) {
+func (p *testPublisher) Publish(message string) {
 	p.collectedMessages = append(p.collectedMessages, message)
 }
 

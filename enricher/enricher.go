@@ -1,8 +1,12 @@
-package main
+package enricher
 
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/wunderlist/snowblower/common"
+	sp "github.com/wunderlist/snowblower/snowplow"
+	sb_aws "github.com/wunderlist/snowblower/aws"
 
 	"github.com/awslabs/aws-sdk-go/aws"
 	"github.com/awslabs/aws-sdk-go/service/sqs"
@@ -14,14 +18,24 @@ var queue struct {
 	params  *sqs.ReceiveMessageInput
 }
 
-func startETL() {
+type enrichedPublisher struct {
+	events []sp.Event
+}
+
+func (s *enrichedPublisher) publish(e *sp.Event) {
+	s.events = append(s.events, *e)
+}
+
+var publisher Publisher
+
+func Start(config common.Config) {
 	queue.service = sqs.New(&aws.Config{
-		Credentials: config.credentials,
+		Credentials: config.Credentials,
 		Region:      "eu-west-1",
 	})
 
 	queue.params = &sqs.ReceiveMessageInput{
-		QueueURL: aws.String(config.sqsURL),
+		QueueURL: aws.String(config.CollectedSqsURL),
 		AttributeNames: []*string{
 			aws.String("All"), // Required
 		},
@@ -32,6 +46,8 @@ func startETL() {
 		VisibilityTimeout: aws.Long(3600),
 		WaitTimeSeconds:   aws.Long(10),
 	}
+
+	publisher = &enrichedPublisher{}
 
 	// while something....
 	processNextBatch()
@@ -50,43 +66,51 @@ func processNextBatch() {
 	}
 
 	for _, message := range resp.Messages {
-		processSNSMessage(message)
+		processSNSMessage(message, publisher)
 	}
 }
 
-func processSNSMessage(message *sqs.Message) {
+func processSNSMessage(message *sqs.Message, p Publisher) {
 	//messageID := *message.MessageID
 	//receiptHandle := *message.ReceiptHandle
 
-	snsMessage := SNSMessage{}
+	snsMessage := sb_aws.SNSMessage{}
 	if err := json.Unmarshal([]byte(*message.Body), &snsMessage); err != nil {
 		fmt.Printf("SNS MESSAGE UNMARSHALL ERROR %s\n", err)
 	} else {
-		payload := CollectorPayload{}
+		payload := sp.CollectorPayload{}
 		if err := json.Unmarshal([]byte(snsMessage.Message), &payload); err != nil {
 			fmt.Printf("COLLECTOR PAYLOAD UNMARSHALL ERROR %s\n", err)
 		} else {
-			processCollectorPayload(payload)
+			processCollectorPayload(payload, p)
 			// schedule for deletion
 		}
 	}
 }
 
-func processCollectorPayload(cp CollectorPayload) {
-	tp := TrackerPayload{}
+func processCollectorPayload(cp sp.CollectorPayload, p Publisher) {
+	tp := sp.TrackerPayload{}
 	if err := json.Unmarshal([]byte(cp.Body), &tp); err != nil {
 		fmt.Printf("TRACKER PAYLOAD UNMARSHALL ERROR %s\n", err)
 	} else {
 		for _, e := range tp.Data {
 			//dsfmt.Printf("%s, %s", cp.NetworkUserID, e.AppID)
-			processEvent(e, tp, cp)
+			processEvent(e, tp, cp, p)
 		}
 	}
 }
 
-func processEvent(e Event, tp TrackerPayload, cp CollectorPayload) {
+func processEvent(e sp.Event, tp sp.TrackerPayload, cp sp.CollectorPayload, p Publisher) {
+	enrichEvent(&e, tp, cp)
+	publishEvent(&e, p)
+	
+	o, _ := json.MarshalIndent(e, "", " ")
+	fmt.Printf("JSON: %s", o)
+}
+
+func enrichEvent(e *sp.Event, tp sp.TrackerPayload, cp sp.CollectorPayload) {
 	b, _ := base64x.URLEncoding.DecodeString(e.UnstructuredEventEncoded)
-	ue := Iglu{}
+	ue := sp.Iglu{}
 	if err := json.Unmarshal(b, &ue); err != nil {
 		fmt.Printf("UE UNMARSHALL ERROR %s\n", err)
 		return
@@ -95,7 +119,7 @@ func processEvent(e Event, tp TrackerPayload, cp CollectorPayload) {
 	e.UnstructuredEvent = string(b)
 
 	b, _ = base64x.URLEncoding.DecodeString(e.ContextsEncoded)
-	co := Iglu{}
+	co := sp.Iglu{}
 	if err := json.Unmarshal(b, &co); err != nil {
 		fmt.Printf("CO UNMARSHALL ERROR %s\n", err)
 		return
@@ -113,8 +137,9 @@ func processEvent(e Event, tp TrackerPayload, cp CollectorPayload) {
 	e.PageURLQuery = cp.QueryString
 	// cp.Headers
 	e.NetworkUserID = cp.NetworkUserID
+}
 
-	o, _ := json.MarshalIndent(e, "", " ")
-	fmt.Printf("JSON: %s", o)
-
+func publishEvent(e *sp.Event, p Publisher) {
+	p.publish(e)
+	//fmt.Printf("\nXXX length of events: %d\n", len(p.(*testPublisher).events))
 }

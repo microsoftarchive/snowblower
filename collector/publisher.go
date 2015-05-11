@@ -1,6 +1,6 @@
-package main
+package collector
 
 // Publisher ...
 type Publisher interface {
-	publish(message string)
+	Publish(message string)
 }

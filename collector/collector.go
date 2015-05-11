@@ -1,4 +1,4 @@
-package main
+package collector
 
 import (
 	"encoding/json"
@@ -10,7 +10,13 @@ import (
 	"time"
 
 	"code.google.com/p/go-uuid/uuid"
+
+	"github.com/wunderlist/snowblower/common"
+	sp "github.com/wunderlist/snowblower/snowplow"
+	sb_aws "github.com/wunderlist/snowblower/aws"
 )
+
+const CollectorPayloadSchema = "iglu:com.snowplowanalytics.snowplow/CollectorPayload/thrift/1-0-0"
 
 type collector struct {
 	publisher Publisher
@@ -61,7 +67,7 @@ func (c *collector) servePost(
 	// slightly wasteful, but it’s certainly not a deal breaker right now and
 	// the savings we get from not shipping empty events is huge
 
-	trackerPayload := TrackerPayload{}
+	trackerPayload := sp.TrackerPayload{}
 	if err := json.Unmarshal(bodyBytes, &trackerPayload); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(nil) // TODO make nice message
@@ -69,7 +75,7 @@ func (c *collector) servePost(
 	}
 
 	if len(trackerPayload.Data) > 0 {
-		collectorPayload := CollectorPayload{
+		collectorPayload := sp.CollectorPayload{
 			Schema:        CollectorPayloadSchema,
 			IPAddress:     realRemoteAddr(request),
 			Timestamp:     time.Now().UnixNano() / 1000000,
@@ -91,30 +97,30 @@ func (c *collector) servePost(
 			return
 		}
 		message := string(messageBytes)
-		c.publisher.publish(message)
+		c.publisher.Publish(message)
 	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(nil)
 }
 
-func startCollector() {
+func Start(config common.Config) {
 
 	healthHandler := &health{}
 	http.Handle("/api/health", healthHandler)
 	http.Handle("/health", healthHandler)
 
 	collectorHandler := &collector{
-		publisher: &SNSPublisher{
-			service: config.snsService,
-			topic:   config.snsTopic,
+		publisher: &sb_aws.SNSPublisher{
+			Service: config.SnsService,
+			Topic: config.CollectedSnsTopic,
 		},
 	}
 
 	http.Handle("/com.snowplowanalytics.snowplow/tp2", collectorHandler)
 	http.Handle("/i", collectorHandler)
 
-	portString := fmt.Sprintf(":%s", config.collectorPort)
+	portString := fmt.Sprintf(":%s", config.CollectorPort)
 	log.Printf("Starting server on %s", portString)
 	http.ListenAndServe(portString, nil)
 }

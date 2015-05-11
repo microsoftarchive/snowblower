@@ -4,18 +4,14 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/wunderlist/snowblower/common"
+	"github.com/wunderlist/snowblower/collector"
+	"github.com/wunderlist/snowblower/enricher"
+
 	"github.com/awslabs/aws-sdk-go/aws"
 	"github.com/awslabs/aws-sdk-go/service/sns"
 	"github.com/spf13/cobra"
 )
-
-var config struct {
-	credentials   aws.CredentialsProvider
-	snsTopic      string
-	snsService    *sns.SNS
-	sqsURL        string
-	collectorPort string
-}
 
 func main() {
 
@@ -23,52 +19,69 @@ func main() {
 		runtime.GOMAXPROCS(runtime.NumCPU())
 	}
 
-	config.collectorPort = os.Getenv("PORT")
-	if config.collectorPort == "" {
-		config.collectorPort = "8080"
+	// build configuration
+	config := common.Config{
+		CollectorPort: 		os.Getenv("COLLECTOR_PORT"),
+		CollectedSnsTopic: 	os.Getenv("COLLECTED_SNS_TOPIC"),
+		CollectedSqsURL:	os.Getenv("COLLECTED_SQS_URL"),
+		EnrichedSnsTopic: 	os.Getenv("ENRICHED_SNS_TOPIC"),
+		EnrichedSqsURL:		os.Getenv("ENRICHED_SQS_URL"),	
 	}
 
-	//var credentials aws.CredentialsProvider
+	// default collector port
+	if config.CollectorPort == "" {
+		config.CollectorPort = "8080"
+	}
+
+	// aws credentials
 	if os.Getenv("AWS_ACCESS_KEY_ID") != "" {
-		config.credentials = aws.DefaultCreds()
+		config.Credentials = aws.DefaultCreds()
 	} else {
-		config.credentials = aws.IAMCreds()
+		config.Credentials = aws.IAMCreds()
 	}
 
-	config.snsTopic = os.Getenv("SNS_TOPIC")
-	config.sqsURL = os.Getenv("SQS_URL")
-
-	config.snsService = sns.New(&aws.Config{
-		Credentials: config.credentials,
+	// sns service
+	config.SnsService = sns.New(&aws.Config{
+		Credentials: config.Credentials,
 		Region:      "eu-west-1",
 	})
 
+
+	// build collector command
 	var collectorCmd = &cobra.Command{
 		Use:   "collect",
 		Short: "Run the collector",
 		Run: func(cmd *cobra.Command, args []string) {
-			if config.snsTopic == "" {
-				panic("SNS_TOPIC required")
+			if config.CollectedSnsTopic == "" {
+				panic("COLLECTED_SNS_TOPIC required")
 			}
-			startCollector()
+			collector.Start(config)
 		},
 	}
 
-	var etlCmd = &cobra.Command{
-		Use:   "etl",
-		Short: "Run the ETL processor",
+
+	// build enricher command
+	var enricherCmd = &cobra.Command{
+		Use:   "enrich",
+		Short: "Run the enricher",
 		Run: func(cd *cobra.Command, args []string) {
-			if config.sqsURL == "" {
-				panic("SQS_URL required")
+			if config.CollectedSqsURL == "" {
+				panic("COLLECTED_SQS_URL required")
+			}
+			if config.EnrichedSqsURL == "" {
+				panic("ENRICHED_SQS_URL required")
 			}
 			// ensure we have database information here
-			startETL()
+			enricher.Start(config)
 		},
 	}
 
+
+	// build main command
 	var rootCmd = &cobra.Command{Use: "snowblower"}
 	rootCmd.AddCommand(collectorCmd)
-	rootCmd.AddCommand(etlCmd)
+	rootCmd.AddCommand(enricherCmd)
 	rootCmd.Execute()
-
 }
+
+
