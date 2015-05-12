@@ -19,7 +19,7 @@ import (
 const CollectorPayloadSchema = "iglu:com.snowplowanalytics.snowplow/CollectorPayload/thrift/1-0-0"
 
 type collector struct {
-	publisher Publisher
+	publisher common.Publisher
 }
 
 func (c *collector) ServeHTTP(w http.ResponseWriter, request *http.Request) {

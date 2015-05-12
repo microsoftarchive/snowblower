@@ -3,6 +3,8 @@ package enricher
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/wunderlist/snowblower/common"
 	sp "github.com/wunderlist/snowblower/snowplow"
@@ -104,8 +106,14 @@ func processEvent(e sp.Event, tp sp.TrackerPayload, cp sp.CollectorPayload, p co
 	enrichEvent(&e, tp, cp)
 	publishEvent(&e, p)
 
+	cpo, _ := json.MarshalIndent(cp, "", " ")
+	fmt.Printf("\n\nCollectorPayload:\n%s\n", cpo)
+
+	tpo, _ := json.MarshalIndent(tp, "", " ")
+	fmt.Printf("\n\nTrackerPayload:\n%s\n", tpo)
+
 	o, _ := json.MarshalIndent(e, "", " ")
-	fmt.Printf("JSON: %s", o)
+	fmt.Printf("\n\nEvent: \n%s\n\n", o)
 }
 
 func enrichEvent(e *sp.Event, tp sp.TrackerPayload, cp sp.CollectorPayload) {
@@ -118,6 +126,9 @@ func enrichEvent(e *sp.Event, tp sp.TrackerPayload, cp sp.CollectorPayload) {
 	b, _ = json.Marshal(ue)
 	e.UnstructuredEvent = string(b)
 
+	o, _ := json.MarshalIndent(ue, "", " ")
+	fmt.Printf("\nUnstructuredEvent: \n%s\n", o)
+
 	b, _ = base64x.URLEncoding.DecodeString(e.ContextsEncoded)
 	co := sp.Iglu{}
 	if err := json.Unmarshal(b, &co); err != nil {
@@ -127,9 +138,15 @@ func enrichEvent(e *sp.Event, tp sp.TrackerPayload, cp sp.CollectorPayload) {
 	b, _ = json.Marshal(co)
 	e.Contexts = string(b)
 
+	o, _ = json.MarshalIndent(co, "", " ")
+	fmt.Printf("\nContexts: \n%s\n", o)
+
+	// Set ETL timestamp
+	e.ETLTimestamp = strconv.FormatInt(time.Now().UnixNano() / 1000000, 10)
+
 	// pick up details from colletor payload
 	e.UserIPAddress = cp.IPAddress
-	e.CollectorTimestamp = string(cp.Timestamp)
+	e.CollectorTimestamp = strconv.FormatInt(cp.Timestamp, 10)
 	e.CollectorVersion = cp.Collector
 	e.UserAgent = cp.UserAgent
 	// cp.RefererURI
@@ -137,10 +154,27 @@ func enrichEvent(e *sp.Event, tp sp.TrackerPayload, cp sp.CollectorPayload) {
 	e.PageURLQuery = cp.QueryString
 	// cp.Headers
 	e.NetworkUserID = cp.NetworkUserID
+
+	// from context
+	contextData := co.Data.([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})
+	e.DeviceType = contextData["deviceModel"].(string)
+	e.OSFamily = contextData["osType"].(string)
+	e.DeviceIsMobile = isMobile(e.OSFamily)
+	fmt.Printf("%v", contextData["deviceModel"])
+
+	//e.OSFamily = 
+}
+
+func isMobile(osType string) bool {
+	switch osType {
+		case "android", "ios": return true
+		default: return false
+	}
 }
 
 func publishEvent(e *sp.Event, p common.Publisher) {
 	// TODO: serialise event.
-	p.Publish("hello")
+	s, _ := json.Marshal(e)
+	p.Publish(string(s))
 	//fmt.Printf("\nXXX length of events: %d\n", len(p.(*testPublisher).events))
 }

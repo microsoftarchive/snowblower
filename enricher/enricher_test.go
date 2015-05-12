@@ -3,8 +3,10 @@ package enricher
 import (
 	"fmt"
 	"testing"
+	"encoding/json"
 	
 	"github.com/wunderlist/snowblower/common"
+	sp "github.com/wunderlist/snowblower/snowplow"
 
 	"github.com/awslabs/aws-sdk-go/service/sqs"
 )
@@ -31,11 +33,56 @@ func setupTestPublisher() common.Publisher {
 	return publisher
 }
 
+func extractEventsFromTestPublisher(publisher *testPublisher, t *testing.T) []sp.Event {
+	var events []sp.Event
+
+	for _, e := range publisher.events {
+		var event sp.Event
+		if err := json.Unmarshal([]byte(e), &event); err != nil {
+			t.Errorf("Failed to unmarshal a created event: %s\n", err)
+		} else {
+			events = append(events, event)
+		}
+	}
+
+	return events
+}
+
 func TestProcessSimpleMessage(t *testing.T) {
 	message := setupSqsMessage(simpleMessage)
 	publisher := setupTestPublisher()
 
 	processSNSMessage(message, publisher)
+	events := extractEventsFromTestPublisher(publisher.(*testPublisher), t)
+
+	if len(events) != 1 {
+		t.Errorf("Shit, got %v events", len(events))
+	}
+
+	event := events[0]
+
+	// redundant?
+	if event.AppID != "Wunderlist/3.2.3 9f43764ad52624fcb734633947fcfb273798111b" {
+		t.Errorf("Shit, AppID field is incorrect!\n\thave: %v\n\texpect: %v\n", event.AppID, "Wunderlist/3.2.3 9f43764ad52624fcb734633947fcfb273798111b")
+	}
+	
+	// redundant?
+	if event.Platform != "mob" {
+		t.Errorf("Shit, Platform field is incorrect!\n\thave: %v\n\texpect: %v\n", event.Platform, "mob")
+	}
+
+	// TODO: test ETLTimestamp
+	
+	if event.CollectorTimestamp != "1430668349024" {
+		t.Errorf("Shit, CollectorTimestamp field is incorrect!\n\thave: %v\n\texpect: %v\n", event.CollectorTimestamp, "1430668349024")
+	}
+
+	// redundant?
+	if event.DeviceTimestamp != "1430668347186" {
+		t.Errorf("Shit, DeviceTimestamp field is incorrect!\n\thave: %v\n\texpect: %v\n", event.DeviceTimestamp, "1430668347186")
+	}
+	
+
 
 	//fmt.Println(storer.(testStorer).events)
 	fmt.Printf("length of events: %d", len(publisher.(*testPublisher).events))
