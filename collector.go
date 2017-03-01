@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"code.google.com/p/go-uuid/uuid"
+	"github.com/google/uuid"
 )
 
 type collector struct {
@@ -20,7 +20,8 @@ func (c *collector) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	var networkID string
 	spCookie, err := request.Cookie("sp")
 	if err != nil {
-		networkID = uuid.NewRandom().String()
+        newuuid, _ := uuid.NewRandom()
+		networkID = newuuid.String()
 	} else {
 		networkID = spCookie.Value
 	}
