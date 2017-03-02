@@ -4,17 +4,16 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/awslabs/aws-sdk-go/aws"
-	"github.com/awslabs/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/spf13/cobra"
 )
 
 var config struct {
-	credentials   aws.CredentialsProvider
 	snsTopic      string
-	snsService    *sns.SNS
 	sqsURL        string
 	collectorPort string
+	awsregion     string
+	awsSession    *session.Session
 }
 
 func main() {
@@ -28,20 +27,11 @@ func main() {
 		config.collectorPort = "8080"
 	}
 
-	//var credentials aws.CredentialsProvider
-	if os.Getenv("AWS_ACCESS_KEY_ID") != "" {
-		config.credentials = aws.DefaultCreds()
-	} else {
-		config.credentials = aws.IAMCreds()
-	}
-
 	config.snsTopic = os.Getenv("SNS_TOPIC")
 	config.sqsURL = os.Getenv("SQS_URL")
+	config.awsregion = os.Getenv("AWS_DEFAULT_REGION")
 
-	config.snsService = sns.New(&aws.Config{
-		Credentials: config.credentials,
-		Region:      "eu-west-1",
-	})
+	config.awsSession = session.Must(session.NewSession())
 
 	var collectorCmd = &cobra.Command{
 		Use:   "collect",

@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/awslabs/aws-sdk-go/aws"
-	"github.com/awslabs/aws-sdk-go/service/sns"
-	"github.com/awslabs/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
 // SNSMessage ...
@@ -24,9 +24,20 @@ type SNSPublisher struct {
 func (p *SNSPublisher) publish(message string) {
 	input := sns.PublishInput{
 		Message:  &message,
-		TopicARN: &p.topic,
+		TopicArn: &p.topic,
 	}
-	p.service.Publish(&input)
+
+	resp, err := p.service.Publish(&input)
+
+	if err != nil {
+		// Print the error, cast err to awserr.Error to get the Code and
+		// Message from an error.
+		fmt.Println(err.Error())
+		return
+	}
+
+	// Pretty-print the response data.
+	fmt.Println("Pushed: ", *resp.MessageId)
 }
 
 // SQSService ...
@@ -37,25 +48,22 @@ type SQSService struct {
 
 func (service *SQSService) getMessages() ([]*sqs.Message, error) {
 	params := &sqs.ReceiveMessageInput{
-		QueueURL: aws.String(service.url),
+		QueueUrl: aws.String(service.url),
 		AttributeNames: []*string{
 			aws.String("SentTimestamp"),
 		},
-		MaxNumberOfMessages: aws.Long(10),
+		MaxNumberOfMessages: aws.Int64(10),
 		MessageAttributeNames: []*string{
 			aws.String("All"),
 		},
-		VisibilityTimeout: aws.Long(60),
-		WaitTimeSeconds:   aws.Long(20),
+		VisibilityTimeout: aws.Int64(60),
+		WaitTimeSeconds:   aws.Int64(20),
 	}
 	response, err := service.service.ReceiveMessage(params)
 
-	if awserr := aws.Error(err); awserr != nil {
+	if err != nil {
 		// A service error occurred.
-		fmt.Println("Error:", awserr.Code, awserr.Message)
-	} else if err != nil {
-		// A non-service error occurred.
-		panic(err)
+		fmt.Println("Error:", err.Error())
 	}
 
 	if response != nil {

@@ -9,6 +9,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/google/uuid"
 )
 
@@ -20,7 +22,7 @@ func (c *collector) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	var networkID string
 	spCookie, err := request.Cookie("sp")
 	if err != nil {
-        newuuid, _ := uuid.NewRandom()
+		newuuid, _ := uuid.NewRandom()
 		networkID = newuuid.String()
 	} else {
 		networkID = spCookie.Value
@@ -107,7 +109,7 @@ func startCollector() {
 
 	collectorHandler := &collector{
 		publisher: &SNSPublisher{
-			service: config.snsService,
+			service: sns.New(config.awsSession, &aws.Config{Region: aws.String(config.awsregion)}),
 			topic:   config.snsTopic,
 		},
 	}

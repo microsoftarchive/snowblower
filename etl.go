@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/awslabs/aws-sdk-go/aws"
-	"github.com/awslabs/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/duncan/base64x"
 )
 
@@ -15,22 +15,19 @@ var queue struct {
 }
 
 func startETL() {
-	queue.service = sqs.New(&aws.Config{
-		Credentials: config.credentials,
-		Region:      "eu-west-1",
-	})
+	queue.service = sqs.New(config.awsSession, &aws.Config{Region: aws.String(config.awsregion)})
 
 	queue.params = &sqs.ReceiveMessageInput{
-		QueueURL: aws.String(config.sqsURL),
+		QueueUrl: aws.String(config.sqsURL),
 		AttributeNames: []*string{
 			aws.String("All"), // Required
 		},
-		MaxNumberOfMessages: aws.Long(1),
+		MaxNumberOfMessages: aws.Int64(1),
 		MessageAttributeNames: []*string{
 			aws.String("All"), // Required
 		},
-		VisibilityTimeout: aws.Long(3600),
-		WaitTimeSeconds:   aws.Long(10),
+		VisibilityTimeout: aws.Int64(3600),
+		WaitTimeSeconds:   aws.Int64(10),
 	}
 
 	// while something....
@@ -41,12 +38,9 @@ func processNextBatch() {
 
 	resp, err := queue.service.ReceiveMessage(queue.params)
 
-	if awserr := aws.Error(err); awserr != nil {
+	if err != nil {
 		// A service error occurred.
-		fmt.Println("Error:", awserr.Code, awserr.Message)
-	} else if err != nil {
-		// A non-service error occurred.
-		panic(err)
+		fmt.Println("Error:", err.Error())
 	}
 
 	for _, message := range resp.Messages {
@@ -59,6 +53,7 @@ func processSNSMessage(message *sqs.Message) {
 	//receiptHandle := *message.ReceiptHandle
 
 	snsMessage := SNSMessage{}
+
 	if err := json.Unmarshal([]byte(*message.Body), &snsMessage); err != nil {
 		fmt.Printf("SNS MESSAGE UNMARSHALL ERROR %s\n", err)
 	} else {
