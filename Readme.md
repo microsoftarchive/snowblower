@@ -25,7 +25,7 @@ One advantage to using SNS/SQS instead of Kinesis is that SQS scales transparent
 Snowblower has two commands:
 
 - `collect` Runs the collector, sending events to SNS or SQS, acting as the second stage in a Snowplow pipeline.
-- `enrich` Pulls events from SQS, enriches them, and sends them into storage into Postgres or Redshift, acting as the third stage in a Snowplow pipeline.
+- `etl` Pulls events from SQS, enriches them, and sends them into storage into Postgres or Redshift, acting as the third stage in a Snowplow pipeline.
 
 
 ## Configuration
@@ -34,5 +34,13 @@ The following environment variables configure the operation of Snowblower when r
 
 - `SNS_TOPIC` Must contain the ARN of the SNS topic to send events to. **REQUIRED**
 - `PORT` Optionally sets the port that the server listens to. Defaults to 8080.
-- `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` Amazon Web Services credentials. If not set, Snowblower will attempt to use IAM Roles.
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_DEFAULT_REGION` Amazon Web Services credentials / config. If not set, Snowblower will attempt to use IAM Roles.
 - `COOKIE_DOMAIN` if not set, a domain won't be set on the session cookie
+
+## Installation
+
+Quick install reference:
+
+- Install godep see: [github.com/tools/godep](https://github.com/tools/godep)
+- `godep restore` installs the package versions specified in Godeps/Godeps.json to your $GOPATH.
+- `godep go install` compiles and places snowblower binary in bin dir.
