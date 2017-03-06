@@ -55,6 +55,7 @@ func (c *collector) servePost(
 ) {
 	bodyBytes, err := ioutil.ReadAll(request.Body)
 	if err != nil {
+		fmt.Println(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(nil) // TODO make nice message
 		return
@@ -66,6 +67,7 @@ func (c *collector) servePost(
 
 	trackerPayload := TrackerPayload{}
 	if err := json.Unmarshal(bodyBytes, &trackerPayload); err != nil {
+		fmt.Println(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(nil) // TODO make nice message
 		return
