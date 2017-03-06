@@ -50,8 +50,11 @@ func processNextBatch() {
 
 func processSNSMessage(message *sqs.Message) {
 	//messageID := *message.MessageID
-	//receiptHandle := *message.ReceiptHandle
-
+	// receiptHandle := *message.ReceiptHandle
+	deleteParams := &sqs.DeleteMessageInput{
+		QueueUrl:      aws.String(config.sqsURL),
+		ReceiptHandle: aws.String(*message.ReceiptHandle),
+	}
 	snsMessage := SNSMessage{}
 
 	if err := json.Unmarshal([]byte(*message.Body), &snsMessage); err != nil {
@@ -63,6 +66,12 @@ func processSNSMessage(message *sqs.Message) {
 		} else {
 			processCollectorPayload(payload)
 			// schedule for deletion
+			_, delerr := queue.service.DeleteMessage(deleteParams)
+			if delerr != nil {
+
+				fmt.Println(err.Error())
+
+			}
 		}
 	}
 }
